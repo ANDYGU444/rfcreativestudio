@@ -803,16 +803,40 @@
     return pr;
   }
   var dpr = Math.min(window.devicePixelRatio || 1, 2);
-  var PQ = prog(VS_QUAD, FS_QUAD);
+  // ---- un programa pequeño por estilo ----
+  // FS_QUAD contiene los 24 estilos. En lugar de compilarlo entero (muy pesado en Windows/DirectX),
+  // se compila una variante por uso con "mode" y "SA" fijos como constantes: el compilador elimina
+  // todo el código de los demás estilos. Las variantes se preparan de antemano, una por cuadro.
+  var PQ = null, PQC = {}, warmQ = [], pext = gl.getExtension("KHR_parallel_shader_compile");
+  var VSQ = sh(gl.VERTEX_SHADER, VS_QUAD);
+  function startProg(mode, sa) {
+    var k = mode + "_" + sa; if (PQC[k]) return PQC[k];
+    var src = FS_QUAD.replace("uniform int mode;", "const int mode=" + mode + ";").replace("uniform int SA;", "const int SA=" + sa + ";");
+    var fs = gl.createShader(gl.FRAGMENT_SHADER); gl.shaderSource(fs, src); gl.compileShader(fs);
+    var pr = gl.createProgram(); gl.attachShader(pr, VSQ); gl.attachShader(pr, fs); gl.bindAttribLocation(pr, 0, "pos"); gl.linkProgram(pr);
+    return (PQC[k] = { pr: pr, fs: fs, ok: undefined });
+  }
+  function getProg(mode, sa) {
+    var e = startProg(mode, sa);
+    if (e.ok === undefined) { e.ok = !!gl.getProgramParameter(e.pr, gl.LINK_STATUS); if (!e.ok) console.warn(gl.getShaderInfoLog(e.fs) || gl.getProgramInfoLog(e.pr)); }
+    return e.ok ? e.pr : null;
+  }
+  function warm(mode, sa) { if (!PQC[mode + "_" + sa]) warmQ.push([mode, sa]); }
+  function pumpWarm() { if (warmQ.length) { var w = warmQ.shift(); startProg(w[0], w[1]); } }
+  function warmNext() {   // deja listos el reposo actual, la transición al siguiente y el reposo del siguiente
+    var nx = ORDER[(ORDER.indexOf(cur) + 1) % ORDER.length];
+    warm(200 + nx, cur); warm(100 + nx, nx);
+    var nn = ORDER[(ORDER.indexOf(nx) + 1) % ORDER.length]; warm(200 + nn, nx);
+  }
   var PS = prog(VS_SHARD, FS_SHARD);
   var PP = prog(VS_PART.replace("PSIZE", (2.2 * dpr).toFixed(2) + "*(1.0)"), FS_PART);
-  if (!PQ || !PS || !PP) return;
+  if (!VSQ || !PS || !PP) return;
 
   // ---------------------------------------------------------------- geometría
   var quad = gl.createVertexArray(); gl.bindVertexArray(quad);
   var qb = gl.createBuffer(); gl.bindBuffer(gl.ARRAY_BUFFER, qb);
   gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, 1]), gl.STATIC_DRAW);
-  var lq = gl.getAttribLocation(PQ, "pos"); gl.enableVertexAttribArray(lq); gl.vertexAttribPointer(lq, 2, gl.FLOAT, false, 0, 0);
+  gl.enableVertexAttribArray(0); gl.vertexAttribPointer(0, 2, gl.FLOAT, false, 0, 0);
 
   function rnd(seed) { var s = seed; return function () { s = (s * 16807) % 2147483647; return (s - 1) / 2147483646; }; }
 
@@ -1010,14 +1034,14 @@
     gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);
     var tapT = t - tapAt;
     if (!anim) {
-      setU(PQ, cur, cur, 0, t, tapT, 100 + cur); gl.bindVertexArray(quad); gl.drawArrays(gl.TRIANGLES, 0, 6);
+      var pi = getProg(100 + cur, cur); if (pi) { setU(pi, cur, cur, 0, t, tapT, 100 + cur); gl.bindVertexArray(quad); gl.drawArrays(gl.TRIANGLES, 0, 6); }
     } else {
       var pp = Math.min(1, (t - anim.t0) / anim.dur), a = anim.a, b = anim.b, m = a;   // modo = índice del logo de salida
       if (POOL[a] !== undefined) {
         nibOn = 0;
         if (b === 28) { var q3 = Math.min(1, Math.max(0, (pp - 0.46) / 0.51)), pr = Math.min(1, Math.max(0, (q3 - 0.18) / 0.74));
           if (pr > 0 && pr < 1) { nibP = nibAt(pr); nibOn = Math.min(1, pr / 0.02, (1 - pr) / 0.03); } }
-        setU(PQ, a, b, pp, t, tapT, 200 + b); gl.bindVertexArray(quad); gl.drawArrays(gl.TRIANGLES, 0, 6);
+        var pt = getProg(200 + b, a); if (pt) { setU(pt, a, b, pp, t, tapT, 200 + b); gl.bindVertexArray(quad); gl.drawArrays(gl.TRIANGLES, 0, 6); }
         if (b === 3 || a === 3) { if (b === 3) buildPoolParticles(b); else buildRainParticles(a);
           gl.blendFunc(gl.ONE, gl.ONE);
           setU(PP, a, b, pp, t, tapT, b === 3 ? 20 : 21); gl.bindVertexArray(partVAO); gl.drawArrays(gl.POINTS, 0, NPART);
@@ -1037,13 +1061,16 @@
       } else {
         setU(PQ, a, b, pp, t, tapT, m); gl.bindVertexArray(quad); gl.drawArrays(gl.TRIANGLES, 0, 6);
       }
-      if (pp >= 1) { cur = b; anim = null; settle = 3; }
+      if (pp >= 1) { cur = b; anim = null; settle = 3; warmNext(); }
     }
+    if (!anim) pumpWarm();
     if (anim || tapT < 0.7 || settle-- > 0 || (visible && !document.hidden)) { requestAnimationFrame(draw); } else { running = false; }
   }
   function kick() { if (!running) { running = true; requestAnimationFrame(draw); } }
 
   function start() {
+    if (!getProg(100 + cur, cur)) return;   // si la variante no compila, se queda el logo CSS
+    warmNext();
     stage.classList.add("gl-on"); stage.appendChild(canvas);
     window.addEventListener("resize", function () { kick(); });
     if ("IntersectionObserver" in window) new IntersectionObserver(function (en) { visible = en[0].isIntersecting; if (visible) kick(); }).observe(canvas);
