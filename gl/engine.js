@@ -941,9 +941,34 @@
   var hint = document.getElementById("logo-hint"), phrase = document.getElementById("logo-phrase"), live = document.getElementById("logo-live");
   var touched = false;
 
+  // ---- calidad automática ----
+  // Mide el intervalo real entre cuadros. Si el equipo no alcanza ~40 cuadros por segundo de forma sostenida,
+  // baja un nivel: menos resolución interna y, desde el nivel 2, reposo a 30 cuadros por segundo.
+  // El nivel se recuerda durante la sesión para no volver a empezar lento en cada recarga.
+  var QL = [{ s: 1, fps: 0 }, { s: 0.8, fps: 0 }, { s: 0.65, fps: 30 }, { s: 0.5, fps: 30 }];
+  var qLv = 0, lastRaf = 0, qAcc = 0, qN = 0, qWarm = 0, qBad = 0, lastDraw = 0;
+  try { var qs0 = +sessionStorage.getItem("rfq"); if (qs0 > 0 && qs0 < QL.length) qLv = qs0; } catch (e) {}
+  function qSave() { try { sessionStorage.setItem("rfq", String(qLv)); } catch (e) {} }
+  function measure(now) {
+    if (window.__rfT !== undefined) return;                 // reloj de prueba: sin ajuste
+    if (document.hidden || !visible) { lastRaf = 0; qWarm = 0; return; }
+    if (lastRaf) {
+      var dt = now - lastRaf;
+      if (dt < 250) {                                        // ignora pausas largas (pestaña, scroll brusco)
+        if (qWarm < 90) qWarm++;                             // ~1,5 s de calentamiento tras arrancar o volver
+        else { qAcc += dt; qN++;
+          if (qN >= 60) { var avg = qAcc / qN; qAcc = 0; qN = 0;
+            if (avg > 24) { if (++qBad >= 2 && qLv < QL.length - 1) { qLv++; qBad = 0; qWarm = 45; qSave(); } }
+            else qBad = 0; } }
+      }
+    }
+    lastRaf = now;
+  }
+  window.__rfQ = function () { return qLv; };
+
   function resize() {
-    var r = canvas.getBoundingClientRect();
-    var w = Math.max(2, Math.round(r.width * dpr)), h = Math.max(2, Math.round(r.height * dpr));
+    var r = canvas.getBoundingClientRect(), k = dpr * QL[qLv].s;
+    var w = Math.max(2, Math.round(r.width * k)), h = Math.max(2, Math.round(r.height * k));
     if (canvas.width !== w || canvas.height !== h) { canvas.width = w; canvas.height = h; }
     gl.viewport(0, 0, canvas.width, canvas.height);
   }
@@ -972,7 +997,14 @@
   }
   function clock() { return window.__rfT !== undefined ? window.__rfT : performance.now() / 1000; }
   window.__rfKick = function () { kick(); };
-  function draw() {
+  function draw(ts) {
+    ts = ts || performance.now(); measure(ts);
+    var cap = QL[qLv].fps;
+    if (cap && !anim && clock() - tapAt > 0.7 && settle <= 0 && ts - lastDraw < 1000 / cap - 4) {   // reposo limitado: se salta este cuadro
+      if (visible && !document.hidden) requestAnimationFrame(draw); else running = false;
+      return;
+    }
+    lastDraw = ts;
     var t = clock(); resize();
     gl.clearColor(0, 0, 0, 0); gl.clear(gl.COLOR_BUFFER_BIT);
     gl.enable(gl.BLEND); gl.blendFunc(gl.ONE, gl.ONE_MINUS_SRC_ALPHA);

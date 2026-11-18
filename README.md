@@ -68,6 +68,7 @@ En el inicio, cada toque cambia el logo al siguiente estilo. Hay **24 estilos an
 - Al tocar, corre la **transición "charco"** (unos 2,3 s): el estilo actual se derrite a su manera, cae a un charco que cambia de material y el estilo nuevo emerge de él.
 - Orden del recorrido: el arreglo `ORDER` en `engine.js`. Los índices corresponden a `NAMES` y a los archivos `gl/N.webp`. Para retirar un estilo basta con quitar su número de `ORDER`, y su textura ya no se descarga.
 - Se pausa solo cuando el logo no está en pantalla.
+- **Calidad automática:** mide la fluidez real. Si el equipo no alcanza unos 40 cuadros por segundo durante unos 2 segundos seguidos, baja un nivel (hay 4 niveles). Cada nivel reduce la resolución interna del canvas (100 %, 80 %, 65 % y 50 %), y desde el nivel 2 limita el reposo a 30 cuadros por segundo. Las transiciones siempre van a velocidad completa. El nivel se guarda en `sessionStorage` (`rfq`) durante la sesión. Para ver el nivel actual, ejecutar `__rfQ()` en la consola.
 
 **Respaldo sin WebGL:** si el navegador no tiene WebGL2 o el usuario activó `prefers-reduced-motion`, el motor no arranca y se usa el recorrido CSS de `#logo-stage`. Ahí cada versión es un `<span class="lv" data-in="..." data-out="...">`.
 
