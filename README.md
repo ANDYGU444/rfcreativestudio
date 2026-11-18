@@ -9,6 +9,12 @@ Sitio oficial de **RF Creative Studio**: sitios web, identidad de marca, publici
 rf-creative-studio/
 ├── index.html      ← todo el sitio: HTML, CSS y JavaScript en un solo archivo
 ├── favicon.svg     ← ícono de la pestaña del navegador
+├── gl/
+│   ├── engine.js   ← motor WebGL del logo: 24 estilos animados y transición "charco"
+│   ├── N.webp      ← textura de cada estilo (1040×640, mismo encuadre para todos)
+│   ├── ascii.png   ← atlas de caracteres del estilo Código ASCII
+│   └── 28w.png     ← orden de escritura de la Manuscrita (16 bits en R/G, máscara en B)
+├── logos/          ← versiones raster del logo usadas por el modo sin WebGL
 ├── marca/
 │   ├── rf-logo-color.svg   ← logo original (vectorial)
 │   ├── rf-logo-blanco.svg  ← una tinta, para fondos oscuros
@@ -55,14 +61,17 @@ python3 -m http.server 8000
 
 ## Cómo funciona el logo interactivo
 
-En el inicio, el logo cambia de estilo con cada toque (20 versiones) y vuelve al original después de la última.
+En el inicio, cada toque cambia el logo al siguiente estilo. Hay **24 estilos animados** y, después del último, vuelve al original.
 
-- Cada versión es un `<span class="lv ...">` dentro de `#logo-stage`, con dos atributos:
-  - `data-in`: clase de la animación de entrada (por ejemplo `i-draw`, `i-pixels` o `i-grow`).
-  - `data-out`: clase de la animación de salida (por ejemplo `o-blur`, `o-drop` o `o-melt`).
-- Para **agregar una versión**, se crea otro `<span class="lv" data-in="..." data-out="..." data-name="Nombre">` con su SVG. El orden en el HTML es el orden del recorrido.
+**Motor WebGL (`gl/engine.js`)**, que es el modo normal:
+- Dibuja el logo en un `<canvas>` con shaders. Cada estilo tiene una animación propia **en reposo**: fuego que arde, vidrio que fluye, la pelotita de la Geométrica que rebota, la pluma de la Manuscrita, etc.
+- Al tocar, corre la **transición "charco"** (unos 2,3 s): el estilo actual se derrite a su manera, cae a un charco que cambia de material y el estilo nuevo emerge de él.
+- Orden del recorrido: el arreglo `ORDER` en `engine.js`. Los índices corresponden a `NAMES` y a los archivos `gl/N.webp`. Para retirar un estilo basta con quitar su número de `ORDER`, y su textura ya no se descarga.
+- Se pausa solo cuando el logo no está en pantalla.
+
+**Respaldo sin WebGL:** si el navegador no tiene WebGL2 o el usuario activó `prefers-reduced-motion`, el motor no arranca y se usa el recorrido CSS de `#logo-stage`. Ahí cada versión es un `<span class="lv" data-in="..." data-out="...">`.
+
 - El aviso "Toca el logo" desaparece al primer toque y se reemplaza por la frase "Una marca, mil formas de contarla."
-- Los IDs internos de los SVG de las versiones llevan el prefijo `x` (`xChr`, `xDots`, etc.) para no chocar entre sí.
 
 ## Animaciones y accesibilidad
 
