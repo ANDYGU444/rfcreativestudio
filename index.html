@@ -33,7 +33,7 @@
   color-scheme:dark;
 }
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
+html{scroll-behavior:smooth;overflow-x:clip}
 body{margin:0;background:var(--ink);color:var(--text);font-family:var(--body);font-size:17px;line-height:1.6;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 img,svg{max-width:100%}
 a{color:inherit}
@@ -42,7 +42,9 @@ p{margin:0}
 :focus-visible{outline:3px solid var(--orange);outline-offset:3px;border-radius:6px}
 .wrap{width:min(var(--wrap),100% - 40px);margin-inline:auto}
 .grad-text{background:var(--grad);-webkit-background-clip:text;background-clip:text;color:transparent}
-.eyebrow{font-size:13px;font-weight:600;letter-spacing:.28em;text-transform:uppercase;color:var(--muted)}
+.eyebrow{font-size:14px;font-weight:600;letter-spacing:.02em;color:var(--muted)}
+.accent-text{color:#9C86FF}
+.step-n{color:var(--violet)}
 .btn{display:inline-flex;align-items:center;gap:10px;padding:15px 26px;border-radius:999px;font-weight:600;font-size:15px;text-decoration:none;border:1px solid transparent;transition:transform .2s ease,background .2s ease,border-color .2s ease;min-height:48px}
 .btn:hover{transform:translateY(-2px)}
 .btn-primary{background:var(--violet);color:#fff}
@@ -126,7 +128,7 @@ section{scroll-margin-top:80px}
 .phone .row{height:34px;border-radius:9px;background:#191A2B}
 .illus{position:absolute;left:16px;bottom:14px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:#8E8BA3}
 .proj-body{padding:34px;display:flex;flex-direction:column;gap:16px;flex:1}
-.proj-tag{font-size:12.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--orange)}
+.proj-tag{font-size:13px;font-weight:600;letter-spacing:.02em;color:var(--orange)}
 .proj h3{font-size:32px;font-weight:700}
 .proj p{color:var(--muted)}
 .todo{border:1px dashed #4A4C70;border-radius:12px;padding:14px 16px;font-size:14.5px;color:#C9C6DA;background:#0B0C16}
@@ -197,7 +199,7 @@ input:focus,select:focus,textarea:focus{outline:none;border-color:var(--violet);
 footer{padding:72px 0 110px;border-top:1px solid var(--line);margin-top:0}
 .foot{display:grid;grid-template-columns:1.4fr 1fr 1fr;gap:40px}
 .foot p{color:var(--muted);margin-top:16px;max-width:24em;font-size:15px}
-.foot h4{margin:0 0 14px;font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--muted);font-weight:600}
+.foot h4{margin:0 0 14px;font-size:14px;letter-spacing:.02em;color:var(--muted);font-weight:600}
 .foot ul{list-style:none;margin:0;padding:0;display:grid;gap:10px;font-size:15px}
 .foot ul a{text-decoration:none;color:#D9D6E6}
 .foot ul a:hover{color:#fff}
@@ -624,8 +626,6 @@ html:not(.anim) .sign::after{transform:rotate(-4deg)}
 
 <main>
   <section class="hero" id="inicio">
-    <div class="orb orb-a" aria-hidden="true"></div>
-    <div class="orb orb-b" aria-hidden="true"></div>
     <div class="wrap hero-in">
       <div class="hero-copy" id="hero-copy">
         <div class="eyebrow">RF Creative Studio · Costa Rica</div>
@@ -856,7 +856,7 @@ html:not(.anim) .sign::after{transform:rotate(-4deg)}
       <div class="sec-head">
         <div>
           <div class="eyebrow" data-r="left">Nuestros servicios</div>
-          <h2 data-split>Todo lo que tu marca necesita para <span class="grad-text">verse y venderse</span></h2>
+          <h2 data-split>Todo lo que tu marca necesita para <span class="accent-text">verse y venderse</span></h2>
         </div>
         <p data-r="blur">Puedes contratar un servicio por separado o dejarnos el paquete completo: desde el logo hasta el sitio web y las publicaciones de cada semana.</p>
       </div>
@@ -906,7 +906,7 @@ html:not(.anim) .sign::after{transform:rotate(-4deg)}
       <div class="sec-head">
         <div>
           <div class="eyebrow" data-r="left">Proyectos</div>
-          <h2 data-split>Trabajos en los que <span class="grad-text">hemos participado</span></h2>
+          <h2 data-split>Trabajos en los que <span class="accent-text">hemos participado</span></h2>
         </div>
         <p data-r="right">Cada proyecto lleva nuestra firma al final. Estos son algunos de los trabajos en los que hemos puesto ideas, diseño y código.</p>
       </div>
@@ -967,10 +967,10 @@ html:not(.anim) .sign::after{transform:rotate(-4deg)}
       </div>
       <div class="steps-line" id="steps-line" aria-hidden="true"><i></i></div>
       <div class="steps" data-stagger>
-        <div class="step" data-r="flip"><div class="step-n grad-text">01</div><h3>Conversamos</h3><p>Nos escribes por WhatsApp y nos cuentas qué necesitas, para quién es y qué quieres lograr.</p><div class="step-bar"></div></div>
-        <div class="step" data-r="flip"><div class="step-n grad-text">02</div><h3>Propuesta</h3><p>Te enviamos una propuesta clara con lo que incluye, el tiempo estimado y el costo.</p><div class="step-bar"></div></div>
-        <div class="step" data-r="flip"><div class="step-n grad-text">03</div><h3>Diseño y desarrollo</h3><p>Creamos tu proyecto y te mostramos avances para que puedas pedir ajustes en el camino.</p><div class="step-bar"></div></div>
-        <div class="step" data-r="flip"><div class="step-n grad-text">04</div><h3>Lanzamiento</h3><p>Publicamos, revisamos que todo funcione y te explicamos cómo sacarle provecho.</p><div class="step-bar"></div></div>
+        <div class="step" data-r="flip"><div class="step-n">01</div><h3>Conversamos</h3><p>Nos escribes por WhatsApp y nos cuentas qué necesitas, para quién es y qué quieres lograr.</p><div class="step-bar"></div></div>
+        <div class="step" data-r="flip"><div class="step-n">02</div><h3>Propuesta</h3><p>Te enviamos una propuesta clara con lo que incluye, el tiempo estimado y el costo.</p><div class="step-bar"></div></div>
+        <div class="step" data-r="flip"><div class="step-n">03</div><h3>Diseño y desarrollo</h3><p>Creamos tu proyecto y te mostramos avances para que puedas pedir ajustes en el camino.</p><div class="step-bar"></div></div>
+        <div class="step" data-r="flip"><div class="step-n">04</div><h3>Lanzamiento</h3><p>Publicamos, revisamos que todo funcione y te explicamos cómo sacarle provecho.</p><div class="step-bar"></div></div>
       </div>
     </div>
   </section>
@@ -980,7 +980,7 @@ html:not(.anim) .sign::after{transform:rotate(-4deg)}
       <div class="about">
         <div class="about-story">
           <div class="eyebrow" data-r="left">Nosotros</div>
-          <h2 data-split style="font-size:clamp(36px,5vw,58px);font-weight:700;margin-top:14px">Dos amigos, <span class="grad-text">una sola firma</span></h2>
+          <h2 data-split style="font-size:clamp(36px,5vw,58px);font-weight:700;margin-top:14px">Dos amigos, <span class="accent-text">una sola firma</span></h2>
           <p data-r="up"><strong>RF</strong> nace de dos nombres: <strong>Rodrigo</strong> y <strong>Fabricio</strong>. Somos dos amigos que unieron la programación, el diseño y la comunicación para ayudar a negocios a verse profesionales en internet.</p>
           <p data-r="up" style="--d:.15s">Por eso al final de cada sitio y cada publicidad que hacemos aparece la misma firma: es nuestra forma de responder por el trabajo.</p>
           <div class="sign" data-r="wipe" style="--d:.3s" aria-hidden="true">RF</div>
@@ -1046,7 +1046,7 @@ html:not(.anim) .sign::after{transform:rotate(-4deg)}
       <div class="contact" data-r="rise">
         <div class="contact-info">
           <div class="eyebrow" data-r="left">Contacto</div>
-          <h2 data-split>¿Tienes una idea? <span class="grad-text">Hagamos que conecte.</span></h2>
+          <h2 data-split>¿Tienes una idea? <span class="accent-text">Hagamos que conecte.</span></h2>
           <p data-r="blur">Escríbenos directamente por WhatsApp o completa el formulario: armamos el mensaje por ti y solo tienes que enviarlo.</p>
           <a data-r="pop" class="wa-num" href="https://wa.me/50662867675" target="_blank" rel="noopener"><svg aria-hidden="true" style="color:#1FAF5A"><use href="#wa"/></svg>+506 6286-7675</a>
           <div class="wa-note">WhatsApp · Costa Rica</div>
